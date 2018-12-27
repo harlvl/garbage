@@ -6,6 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Http\Controllers\Controller;
 
+use App\Http\Resources\GameResource;
+use App\Http\Resources\GamesResource;
+
+use App\Http\Resources\ExceptionResource;
+use App\Http\Resources\NotFoundResource;
+use App\Http\Resources\ErrorResource;
+use App\Http\Resources\ValidationResource;
+use App\Http\Resources\ResponseResource;
+
+use Illuminate\Support\Facades\DB;
+
 class GameController extends Controller
 {
     /**
@@ -15,7 +26,16 @@ class GameController extends Controller
      */
     public function index()
     {
-        //
+        try{
+            $games = $this->gameRepository->getAll();
+            $gamesResource =  new GamesResource($games);  
+            $responseResource = new ResponseResource(null);
+            $responseResource->title('List of games');  
+            $responseResource->body($gamesResource);
+            return $responseResource;
+        }catch(\Exception $e){
+            return (new ExceptionResource($e))->response()->setStatusCode(500);   
+        }
     }
 
     /**
@@ -34,9 +54,31 @@ class GameController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $gameData)
     {
-        //
+        try{
+            $validator = \Validator::make($gameData->all(), 
+                            ['title' => 'required',
+                            'genre' => 'required',
+                            'release_date' => 'required']);
+
+            if ($validator->fails()) {
+                return (new ValidationResource($validator))->response()->setStatusCode(422);
+            }
+
+            DB::beginTransaction();
+            $game = $this->gameRepository->save($gameData->all());
+            DB::commit();
+
+            $gameResource =  new GameResource($game);
+            $responseResource = new ResponseResource(null);
+            $responseResource->title('Game stored successfully');       
+            $responseResource->body($gameResource);       
+            return $responseResource;
+        }catch(\Exception $e){
+            DB::rollback();   
+            return (new ExceptionResource($e))->response()->setStatusCode(500);
+        }
     }
 
     /**

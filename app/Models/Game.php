@@ -12,8 +12,8 @@ class Game extends Model
     protected $fillable = [
       'id',
       'title',
-      'release_year',
       'genre',
+      'release_date',
       'deleted'
     ];
 }

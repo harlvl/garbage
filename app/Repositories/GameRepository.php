@@ -3,7 +3,7 @@ namespace App\Repositories;
 use App\Models\Game;
 use App\Http\Helpers\DateFormat;
 	
-class UsuarioRepository extends BaseRepository
+class GameRepository extends BaseRepository
 {
     public function __construct(Game $game=null)
     {
